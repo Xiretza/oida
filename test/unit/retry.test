@@ -1,0 +1,9 @@
+dash retry.sh
+>>>
+runs once
+runs thrice
+runs thrice
+runs thrice
+runs once again
+>>>2
+>>>= 0

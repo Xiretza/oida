@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+DISK_A=5
+DISK_B=6
+
+old_disk=$(awk -v needle="/var/lib/exim4" 'BEGIN { rv = 1 } $2==needle { print $1; rv = 0 } END { exit rv } ' /proc/mounts)
+
+if [ "x$old_disk" = "x/dev/sda$DISK_A" ]; then
+	new_disk=/dev/sda$DISK_B
+elif [ "x$old_disk" = "x/dev/sda$DISK_B" ]; then
+	new_disk=/dev/sda$DISK_A
+else
+	exit 1
+fi
+
+invoke-rc.d --force exim4 stop
+
+flock /run/purge-mailvar  mkfs.ext4 -F -L exim $new_disk
+
+mkdir -p /media/mailvar-tmp
+mount $new_disk /media/mailvar-tmp
+cp -av /var/lib/exim4/. /media/mailvar-tmp
+umount /media/mailvar-tmp
+
+umount $old_disk
+mount $new_disk
+
+invoke-rc.d --force exim4 start
+
+flock /run/purge-mailvar  shred -n10 -z $old_disk

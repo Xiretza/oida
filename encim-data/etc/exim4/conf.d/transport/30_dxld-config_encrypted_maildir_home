@@ -1,0 +1,16 @@
+
+### transport/30_dxld-config_encrypted_maildir_home
+#################################
+
+encrypted_maildir_home:
+  debug_print = "T: encrypted_maildir_home for $local_part@$domain"
+  driver = appendfile
+  directory = $home/Maildir
+  delivery_date_add
+  envelope_to_add
+  return_path_add
+  maildir_format
+  maildir_tag = .gpg
+  directory_mode = 0700
+  mode = 0400
+  transport_filter = /etc/exim4/dxld/encrypt.sh

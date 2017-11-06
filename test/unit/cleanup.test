@@ -1,0 +1,45 @@
+dash cleanup.sh
+>>>
+first
+second
+>>>2
+Cleanup: $ echo first
+Cleanup: $ echo second
+Cleaning /tmp/encim-tests/foo/1
+Cleaning /tmp/encim-tests/foo/2
+Cleaning /tmp/encim-tests/foo/3
+Cleaning /tmp/encim-tests/foo/bar
+Cleaning /tmp/encim-tests/foo/bar
+Cleaning /tmp/encim-tests/foo
+Cleaning /tmp/encim-tests
+>>>= 0
+
+dash cleanup-trap.sh INT
+>>>
+cleanup INT
+>>>= 130
+
+dash cleanup-trap.sh TERM
+>>>
+cleanup TERM
+>>>= 143
+
+dash cleanup-trap.sh EXIT
+>>>
+cleanup EXIT
+>>>= 0
+
+dash cleanup-trap.sh EXIT0
+>>>
+cleanup EXIT0
+>>>= 0
+
+dash cleanup-trap.sh EXIT42
+>>>
+cleanup EXIT42
+>>>= 42
+
+dash cleanup-trap.sh ERROR69
+>>>2
+Cleanup: $ exit 69
+>>>= 69

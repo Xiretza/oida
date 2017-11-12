@@ -82,7 +82,6 @@ _in_runas () {
 		set -- "$@"
 	fi
 
-	set -x
 	if [ "$fstab" ]; then
 		_in_fstab "$fstab" "$@"
 	else

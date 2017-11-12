@@ -54,7 +54,7 @@ fi
 [ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
 
 if [ x"$UNSHARED_FLAG" != x'--unshared' ]; then
-	unshare_rootro -w "$OUTDIR" sh -x "$0" --unshared "$OUTDIR" "$SCRIPT" "$CMD" "$@"
+	unshare_rootro -w "$OUTDIR" sh "$0" --unshared "$OUTDIR" "$SCRIPT" "$CMD" "$@"
 	exit $?
 fi
 
@@ -101,7 +101,7 @@ run_step () {
 			cat "$SCRIPT"
 
 			printf '\n%s\n' '"$@"'
-		} | $mode  PS4="+($stepnum)    " sh -x -s step "$step1" "$step"
+		} | $mode  PS4="+($stepnum)    " sh -s step "$step1" "$step"
 		;;
 
 	esac

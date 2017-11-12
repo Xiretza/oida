@@ -62,6 +62,9 @@ fi
 
 mkdir -p "$OUTDIR"/rootfs.mnt
 
+# clean locale environment stuff
+eval export "$(env -i LANG=C.UTF-8 locale)"
+
 run_step () {
 	local mode cached user  old_IFS IFS
 	mode=host

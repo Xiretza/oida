@@ -42,6 +42,5 @@ image_create () {
 	eval "$mnt_var=\$mnt"
 
 	# MiB
-	dd if=/dev/zero of="$image" \
-	   bs=1024 seek=$(( ( 1024 * size ) - 1)) count=1
+	dd if=/dev/zero bs=1024 seek=$(( ( 1024 * size ) - 1)) count=1 > "$image"
 }

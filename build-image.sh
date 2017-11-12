@@ -53,12 +53,13 @@ fi
 
 [ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
 
+mkdir -p "$OUTDIR"
+
 if [ x"$UNSHARED_FLAG" != x'--unshared' ]; then
 	unshare_rootro -w "$OUTDIR" sh "$0" --unshared "$OUTDIR" "$SCRIPT" "$CMD" "$@"
 	exit $?
 fi
 
-mkdir -p "$OUTDIR"
 mkdir -p "$OUTDIR"/rootfs.mnt
 
 run_step () {

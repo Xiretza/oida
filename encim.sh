@@ -114,7 +114,6 @@ case "$1" in
 	;;
 
 (cleanup)
-	ls -l / /etc
 	rm -f /etc/resolv.conf
 	rm /etc/hostname
 	rm /var/cache/apt/archives/*.deb
@@ -146,15 +145,15 @@ case "$1" in
 	;;
 
 (config-update)
-	update-initramfs -u -v
 	debconf-set-selections < /srv/debconf-db
+	update-initramfs -u
 	;;
 
 (packages)
 	# We want the package lists to expand to multiple elements, so:
 	# shellcheck disable=SC2046
 	DEBIAN_FRONTEND=noninteractive \
-		apt-get install -y \
+		apt-get install -y -q \
 			grub-pc-bin \
 			systemd-sysv \
 			cloud-guest-utils \
@@ -201,7 +200,8 @@ case "$1" in
 
 	# see debian bug #869771 about the last two options
 	mksquashfs "$OUTDIR"/rootfs.mnt/ "$ROOTFS_LODEVP" \
-		   -noappend   -no-fragments -no-sparse
+		   $(tty -s || printf '%s' -no-progress) -noappend \
+		   -no-fragments -no-sparse
 	mkfs.ext4 -L exim -d "$OUTDIR"/rootfs.mnt/var/lib/exim4/ "$MAILVAR_LODEVP"
 	mkfs.ext4 -L home -d "$OUTDIR"/rootfs.mnt/home/ "$HOME_LODEVP"
 

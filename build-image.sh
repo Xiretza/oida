@@ -95,7 +95,7 @@ run_step () {
 		step "$step1" "$step";;
 
 	    (in_*)
-		printf 'Running [%s] step %s\n' "$opt" "$step" >&2
+		printf '========== Running step %s[%s]\n' "$step" "$opt" >&2
 
 		exec 3<&0
 		{

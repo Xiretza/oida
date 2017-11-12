@@ -97,6 +97,7 @@ run_step () {
 	    (in_*)
 		printf 'Running [%s] step %s\n' "$opt" "$step" >&2
 
+		exec 3<&0
 		{
 			for import in $(imports); do
 			    cat "$LIBDIR"/"$import"
@@ -104,8 +105,9 @@ run_step () {
 
 			cat "$SCRIPT"
 
-			printf '\n%s\n' '"$@"'
+			printf '\n%s <&3\n' '"$@"'
 		} | $mode  PS4="+($stepnum)    " sh -s step "$step1" "$step"
+		exec 3<&-
 		;;
 
 	esac

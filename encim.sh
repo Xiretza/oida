@@ -38,7 +38,6 @@ readonly DATADIR="$(realpath "$TOPDIR"/encim-data)"
 imports () {
 	printf '%s\n' \
        	       cleanup.sh \
-	       target.sh \
 	       image.sh \
 	       loopback.sh
 }

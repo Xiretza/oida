@@ -126,13 +126,5 @@ for step0 in $(steps); do
 
     case "$CMD" in
 	(run) run_step ;;
-	(shell) overlay_create_cached "$step" ;;
     esac
 done
-
-if [ "$CMD" = "shell" ]; then
-	tty
-	# env PS1="\u@$step:\w\$ "  # needs to be in rcfile, ugh
-	in_target_runas -C/home/user user -- bash -l
-#bash -l
-fi

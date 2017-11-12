@@ -16,24 +16,35 @@
 
 set -e -u
 
-### TODO:
-## - parameterise gpg receiver address or just use only ultimately trusted key
-## or something.
-###
-## - parameterise hostnames
+# Usage: cfg VAR:-DEFAULT
+cfg () {
+    eval "unset _${1%%:*} ${1%%:*}; _${1%%:*}=\${$1}"
+    eval "readonly ${1%%:*}=\"\$_${1%%:*}\"; unset _${1%%:*}"
+}
 
+# Usage: replace_cfg FILE...
+sed_cfg () {
+    local v
+    set | grep ^CFG_ | (
+	while read -r c; do
+	    eval "v=\$${c%%=*}"
+	    set -- -e "s/${c%%=*}/$v/" "$@"
+	done
+	sed "$@"
+    )
+}
 
-readonly CONFIG_DEBIAN_RELEASE=stretch
-readonly CONFIG_USERNAME=${CONFIG_USERNAME:-dxld}
+cfg CFG_DEBIAN_RELEASE:-stretch
+cfg CFG_USERNAME:-dxld
+cfg CFG_HOSTNAME:-encim
+cfg CFG_FQDN:-encim.servers.dxld.at
+cfg CFG_EXIM_OTHER_HOSTNAMES:-"$CFG_FQDN : dxld.at : darkboxed.org"
+cfg CFG_GPG_ENC_RECIPIENT:-dxld@encim.servers.dxld.at
+cfg CFG_ROOT_PASSWORD:-root
 
-# Get password from environment without exporting it further
-unset _CONFIG_ROOT_PASSWORD CONFIG_ROOT_PASSWORD
-_CONFIG_ROOT_PASSWORD=${CONFIG_ROOT_PASSWORD:-root}
-CONFIG_ROOT_PASSWORD=$_CONFIG_ROOT_PASSWORD
-unset _CONFIG_ROOT_PASSWORD
 
 export DATADIR
-readonly DATADIR="$(realpath "$TOPDIR"/encim-data)"
+readonly DATADIR="$TOPDIR"/encim-data
 
 imports () {
 	printf '%s\n' \
@@ -101,7 +112,7 @@ case "$1" in
 		debootstrap \
 			--merged-usr \
 			--include=linux-image-amd64,initramfs-tools \
-			"$CONFIG_DEBIAN_RELEASE" "$OUTDIR"/"$name"
+			"$CFG_DEBIAN_RELEASE" "$OUTDIR"/"$name"
 	fi
 
 	in_target_mount -t proc     proc       /proc
@@ -129,24 +140,32 @@ case "$1" in
 	   \
 	   "$OUTDIR"/rootfs.mnt
 
+	sed_cfg -i \
+		"$OUTDIR"/rootfs.mnt/etc/exim4/update-exim4.conf.conf \
+		"$OUTDIR"/rootfs.mnt/etc/exim4/dxld/encrypt.sh \
+		"$OUTDIR"/rootfs.mnt/etc/mailname \
+		"$OUTDIR"/rootfs.mnt/etc/hostname
+
 	mv "$OUTDIR"/rootfs.mnt/home/user/ \
-	   "$OUTDIR"/rootfs.mnt/home/"$CONFIG_USERNAME"
+	   "$OUTDIR"/rootfs.mnt/home/"$CFG_USERNAME"
 
 	chown -R 1000:1000 \
-	      "$OUTDIR"/rootfs.mnt/home/"$CONFIG_USERNAME"
+	      "$OUTDIR"/rootfs.mnt/home/"$CFG_USERNAME"
 
-	echo "root:$CONFIG_ROOT_PASSWORD" \
+	echo "root:$CFG_ROOT_PASSWORD" \
 		| chpasswd -c SHA512 -R "$OUTDIR"/rootfs.mnt
-	useradd -m -U \
+	useradd -M -U \
 		-u 1000 \
 		-s /bin/bash \
 		-R "$OUTDIR"/rootfs.mnt \
-		"$CONFIG_USERNAME"
+		"$CFG_USERNAME"
 	;;
 
 (config-update)
-	debconf-set-selections < /srv/debconf-db
 	update-initramfs -u
+	cat srv/debconf-db \
+		| sed_cfg - \
+		| debconf-set-selections
 	;;
 
 (packages)

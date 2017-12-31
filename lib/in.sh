@@ -46,7 +46,7 @@ _in_fstab () {
 
 # Usage: _in_runas [-R CHROOT_DIR] [-C CHDIR] [-F FSTAB] [-u USER] -- [ENVVAR=VAR...] CMD [ARG...]
 _in_runas () {
-	local -; set -e -u +x
+	local -; set -e -u $(dbg 10 +x:-x)
 	local root chdir fstab user
 	root=/
 	chdir="$PWD"
@@ -135,7 +135,7 @@ in_target_chroot () {
 # Environment:
 #  - inout $_IN_FSTAB
 in_target_mount () {
-	local -; set -u +x
+	local -; set -u $(dbg 10 +x:-x)
 
 	local typ opt dev dir
 	typ=

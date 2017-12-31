@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set -e
-
+set -u -e
 
 export TOPDIR
 readonly TOPDIR="$(realpath "$(dirname "$0")")"
@@ -42,6 +41,8 @@ else
 	CMD=run
 fi
 
+# shellcheck source=lib/debug.sh
+. "$LIBDIR"/debug.sh
 # shellcheck source=lib/cleanup.sh
 . "$LIBDIR"/cleanup.sh
 # shellcheck source=lib/unshare.sh
@@ -53,9 +54,11 @@ fi
 
 [ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
 
+set $(dbg 20 +x:-x)
+
 mkdir -p "$OUTDIR"
 
-if [ x"$UNSHARED_FLAG" != x'--unshared' ]; then
+if [ x"${UNSHARED_FLAG:-}" != x'--unshared' ]; then
 	unshare_rootro -w "$OUTDIR" sh "$0" --unshared "$OUTDIR" "$SCRIPT" "$CMD" "$@"
 	exit $?
 fi
@@ -106,7 +109,7 @@ run_step () {
 			cat "$SCRIPT"
 
 			printf '\n%s <&3\n' '"$@"'
-		} | $mode  PS4="+($stepnum)    " sh -s step "$step1" "$step"
+		} | $mode  PS4="+($stepnum)    " sh -s $(dbg 30 +x:-x) step "$step1" "$step"
 		exec 3<&-
 		;;
 

@@ -25,7 +25,7 @@
 #
 # Note: Uses FD 3 internally
 unshare_rootro () {
-	local -; set -u # +x
+	local -; set -u $(dbg 20 +x:-x)
 	local workdir newnet mntns netns flag rv
 	workdir=
 	newnet=
@@ -58,7 +58,7 @@ unshare_rootro () {
     	exec 3<&0
 	# we want $newnet to expand to nothing when the -n flag is not set
 	# shellcheck disable=SC2086
-	command unshare --mount="$mntns" $newnet -- env -- PS4="+(us-ro)    " sh -s -x "$PWD" "$workdir" "$@" <<-"EOF"
+	command unshare --mount="$mntns" $newnet -- env -- PS4="+(us-ro)    " sh -s $(dbg 40 +x:-x) "$PWD" "$workdir" "$@" <<-"EOF"
 		set -eu
 		umount_R () {
 			if findmnt "$1" >/dev/null; then

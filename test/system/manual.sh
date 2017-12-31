@@ -1,12 +1,14 @@
 #!#/bin/sh
 set -e -u
 
-# shellcheck source=test/system/_common_test-system-check.sh
-. "$(dirname "$0")"/_common_test-system-check.sh
+cd "$(dirname "$0")"/../../
 
-# shellcheck source=test/system/_common_client-server-setup.sh
-. "$(dirname "$0")"/_common_client-server-setup.sh
+pwd
 
-setup 0 encim_ip
+. "$1"
 
-socat STDIO,raw,echo=0,escape=0x1d UNIX-CONNECT:/run/encim-ttyS0.unix
+setup
+
+printf '%s\n' "$ socat STDIO,raw,echo=0,escape=0x1d UNIX-CONNECT:/run/*-ttyS0.unix"
+
+bash

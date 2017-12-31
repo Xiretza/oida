@@ -38,9 +38,27 @@ image_create () {
 
 	mkdir -p "$mnt"
 
-	eval "$image_var=\$image"
-	eval "$mnt_var=\$mnt"
-
 	# MiB
 	dd if=/dev/zero bs=1024 seek=$(( ( 1024 * size ) - 1)) count=1 > "$image"
+
+	eval "$image_var=\$image"
+	eval "$mnt_var=\$mnt"
+}
+
+# Usage: image_copy_tmp IMAGE_PATH TMP_IMAGE= [CHOWN]
+image_copy_tmp () {
+    local -; set -e +x
+
+    local path tmp var chown
+    path="$1"; shift
+    var="$1"; shift
+    [ $# -ge 1 ] && { chown="$1"; shift; }
+
+    tmp=$(mktemp --tmpdir XXXXXXXX.image)
+
+    cleanup "$tmp"
+    cp "$path" "$tmp"
+    [ -n "${chown:-}" ] && chown "$chown" "$tmp"
+
+    eval "$var=\$tmp"
 }

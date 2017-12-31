@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ -z "${ENCIM_TEST_SYSTEM:-}" ]; then
+    echo "$0: Do not run tests directly, they will gobble up your system!">&2
+    exit 1
+fi
 
 host_destroy () {
     local -; set -u +x
@@ -85,6 +89,7 @@ dnsmasq_reload () {
 host_start_dnsmasq () {
     local -; set -u -x
     hostname="$1"; shift
+    domain="$1"; shift
 
     dnsmasq_write_hosts "$hostname"
     dnsmasq_write_dhcp_hosts "$hostname"
@@ -100,12 +105,11 @@ host_start_dnsmasq () {
        --log-facility=- \
        --dhcp-authoritative \
        --dhcp-range=1.2.3.0,static,255.255.255.0 \
-       --dhcp-range=1.2.3.0,static,255.255.255.0 \
-       --domain=servers.dxld.at \
-       --server=/servers.dxld.at/ \
+       --domain="$domain" \
+       --server=/"$domain"/ \
        --expand-hosts \
-       --log-queries \
        "$@"
+    #       --log-queries \
 }
 
 qemu_destroy () {

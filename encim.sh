@@ -24,14 +24,15 @@ cfg () {
 
 # Usage: replace_cfg FILE...
 sed_cfg () {
-    local v
+    exec 3<&0
     set | grep ^CFG_ | (
 	while read -r c; do
 	    eval "v=\$${c%%=*}"
 	    set -- -e "s/${c%%=*}/$v/" "$@"
 	done
-	sed "$@"
+	sed "$@" <&3
     )
+    exec 3<&-
 }
 
 cfg CFG_DEBIAN_RELEASE:-stretch
@@ -88,16 +89,28 @@ steps () {
 	printf '%s\n' \
 		10-bootstrap=host,overlay_cached \
 		\
-		20-cleanup=in_target_chroot,overlay\
+		20-config=in_target,overlay \
+		21-config-update=in_target_chroot \
 		\
-		30-config=in_target,overlay \
-		31-config-update=in_target_chroot \
+		30-packages=in_target_chroot,overlay \
 		\
-		40-packages=in_target_chroot,overlay \
+		40-cleanup=in_target_chroot,overlay\
 		\
 		50-bootloader=in_target_chroot,overlay \
 		\
 		90-disk=in_target_overlay
+}
+
+
+install_deps () {
+    apt-get install \
+	    debootstrap \
+	    squashfs-tools \
+	    e2fsprogs \
+	    dnsmasq \
+	    qemu-system \
+	    swaks \
+	    socat
 }
 
 step () {
@@ -122,12 +135,6 @@ case "$1" in
 	in_target_mount -t tmpfs    tmpfs      /run
 	in_target_mount -t tmpfs    tmpfs      /tmp
 	in_target_mount -o bind,ro  "$DATADIR" /srv
-	;;
-
-(cleanup)
-	rm -f /etc/resolv.conf
-	rm /etc/hostname
-	rm /var/cache/apt/archives/*.deb
 	;;
 
 (config)
@@ -169,6 +176,7 @@ case "$1" in
 	;;
 
 (packages)
+	apt-get update
 	# We want the package lists to expand to multiple elements, so:
 	# shellcheck disable=SC2046
 	DEBIAN_FRONTEND=noninteractive \
@@ -182,6 +190,11 @@ case "$1" in
 			exim4-daemon-heavy \
 			exim4-config \
 			util-linux
+	;;
+
+
+(cleanup)
+	rm /var/cache/apt/archives/*.deb
 	;;
 
 (bootloader)
@@ -203,7 +216,6 @@ case "$1" in
 	loopback_create "$DISK_IMAGE" DISK_LODEV
 	# rootsize=$(( ( $(stat -c '%s' "$OUTDIR"/rootfs.mnt.squashfs) / 512 ) ))
 
-	# SYNC WITH data/usr/local/lib/encim-swap-boot-partitions if changed
 	sfdisk "$DISK_LODEV" <<-EOF
 		1M, 512M   , L, *
 		  , 512M   , L,

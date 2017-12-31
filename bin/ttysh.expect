@@ -1,0 +1,137 @@
+#!/usr/bin/expect --
+
+proc shellescape {str} {
+    return "'[string map {' '\"'\"'} $str]'"
+}
+
+proc escape_cmd {args} {
+    foreach arg $args {
+        if {[llength $arg] == 1} {
+            lappend esc_args [shellescape $arg]
+        } elseif {[llength $arg] == 2 && [lindex $arg 0] == "interpolate"} {
+            lappend esc_args "\"[lindex $arg 1]\""
+        } else {
+            error "unknown escape_cmd instruction '$arg'"
+        }
+    }
+    return [join $esc_args " "]
+}
+
+proc pipeline {args} {
+    foreach cmd $args {
+        lappend cmds [escape_cmd {*}$cmd]
+    }
+
+    return "[join $cmds " | "]; "
+}
+
+proc expect_prompt {} {
+    global prompt
+    expect timeout {exit 1} -re $prompt
+}
+
+
+set prompt "\[$#%] $"
+exp_internal 1
+#log_user 0
+
+set do_sigint 1
+set do_login  1
+
+set i 0; foreach n $argv {set [incr i] $n}
+
+if {$argc <= 0} {
+    exit 1
+}
+
+if {$argc >= 1} {
+    set socket $1
+}
+
+if {$argc >= 2 && $2 == "--no-login"} {
+    set do_login 0
+}
+
+spawn socat STDIO,raw,echo=0 UNIX-CONNECT:[lindex $argv 0]
+
+if $do_login {
+    set timeout 0.1
+
+    while {1} {
+        send   "\x04"
+        expect {
+            "login:"     {set do_sigint 0; break}
+            "logout"     {set do_sigint 0; break}
+            -re $prompt  {set do_sigint 0; set do_login 0; break};#TODO: refactored this now do_login isnt checked after here
+            timeout  {
+                if {$timeout > 30} {
+                    break
+                } else {
+                    set timeout [expr $timeout * 2]
+                }
+            }
+        }
+    }
+
+    if $do_sigint {
+        send   "\x03"
+        expect -re $prompt
+    }
+
+    send   "\x04"
+    expect timeout {exit 1} "login:"
+    send   "root\n"
+
+    expect timeout {exit 1} "Password:"
+    send   "root\n"
+
+    expect {
+        "login incorrect" {exit 1}
+        timeout {exit 1}
+        -re $prompt   {}
+    }
+
+    send "stty -echo\n"
+    expect_prompt
+
+    send "PS2=\n"
+    expect_prompt
+}
+
+proc cmd {cmd} {
+    send "stty -echo\n"
+    expect_prompt
+
+    send "PS2=\n"
+    expect_prompt
+
+    # TODO: if the cmd sends a terminating newline we double it up :<
+    send "{ $cmd 2>/dev/null ; printf 'RV=%s' \$? ;} | base64 -w20 ; echo;\n"
+
+    # ok this awk thing looks bad but it's really not. All it does is check for
+    # a trailing RV=XXX sequence to use as the exit code.
+    set proc [open {| base64 -d 2>@stderr | awk {BEGIN { FS = "="; i=0;}{ if(i > 0 && t) { print t; t = ""; } if(match($0, /(.*)RV=([0-9]+)$/, m)) { i++; t = m[1]; rv = m[2]; } else { print $0; }}END { printf "%s" ,t; exit rv;}}} w]
+
+    while {1} {
+        expect {
+            timeout {exit 1}
+            "\n"    {
+                puts $proc "[string trimright $expect_out(buffer)]\n"
+            };
+            -re $::prompt {
+                break;
+            }
+        }
+    }
+
+    if [catch {close $proc} err errinfo] {
+        foreach {- pid code} [dict get $errinfo -errorcode] break
+        exit $code
+    }
+
+    exit 0
+}
+
+if {$argc >= 3} {
+    cmd $3
+}

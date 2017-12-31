@@ -17,9 +17,8 @@
 
 set -e
 
-# shellcheck source=lib/unshare.sh
-. "$(dirname "$0")"/lib/unshare.sh
-# shellcheck source=lib/cleanup.sh
-. "$(dirname "$0")"/lib/cleanup.sh
+. "$(dirname "$0")"/../lib/unshare.sh
+. "$(dirname "$0")"/../lib/cleanup.sh
+. "$(dirname "$0")"/../lib/debug.sh
 
-unshare_rootro -n PS4='+(tst)    ' ENCIM_TEST=1 sh -x "$@"
+unshare_rootro -n PS4='+(tst)    ' ENCIM_TEST_SYSTEM=1 sh $(dbg 30 +x:-x) "$@"

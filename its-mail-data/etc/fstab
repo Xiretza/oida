@@ -1,0 +1,4 @@
+/dev/sda1		/		squashfs	defaults 0 0
+/dev/disk/by-label/exim	/var/lib/exim4	ext4		defaults 0 2
+/dev/disk/by-label/home	/home		ext4,noexec	defaults 0 2
+none			/tmp		tmpfs		defaults 0 0

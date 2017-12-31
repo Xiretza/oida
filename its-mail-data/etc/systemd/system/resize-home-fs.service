@@ -1,0 +1,19 @@
+[Unit]
+Description=Resize home filesystem to fit available space
+DefaultDependencies=no
+Before=network-online.target
+Before=sysinit.target
+#Before=home.mount
+#Before=systemd-fsck@dev-disk-by\x2dlabel-home.service
+Before=local-fs-pre.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "growpart /dev/sda 7 || true"
+RemainAfterExit=yes
+TimeoutSec=0
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

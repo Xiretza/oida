@@ -44,3 +44,12 @@ $ sudo env ENCIM_IMAGE=/srv/encim-workdir/90-disk.image ./test.sh test/system/ma
 
 You can use `test/system/manual.sh` in the command above instead to boot the
 same test setup but get a shell.
+
+Dependencies
+------------
+
+On Debian the following command will install all necessary dependencies:
+
+```
+apt-get install git debootstrap squashfs-tools qemu-system swaks dnsmasq expect socat 
+```

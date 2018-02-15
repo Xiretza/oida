@@ -28,7 +28,7 @@ sed_cfg () {
     set | grep ^CFG_ | (
 	while read -r c; do
 	    eval "v=\$${c%%=*}"
-	    set -- -e "s/${c%%=*}/$v/" "$@"
+	    set -- -e "s#${c%%=*}#$v#" "$@"
 	done
 	sed "$@" <&3
     )
@@ -42,6 +42,11 @@ cfg CFG_FQDN:-encim.servers.dxld.at
 cfg CFG_EXIM_OTHER_HOSTNAMES:-"$CFG_FQDN : dxld.at : darkboxed.org"
 cfg CFG_GPG_ENC_RECIPIENT:-dxld@encim.servers.dxld.at
 cfg CFG_ROOT_PASSWORD:-root
+
+# Device and partition number to resize on early bootup
+cfg CFG_PART_BOOT_RESIZE_DISK:-/dev/sda
+cfg CFG_PART_BOOT_RESIZE_NUMBER:-7
+
 
 
 export DATADIR
@@ -148,6 +153,7 @@ case "$1" in
 	   "$OUTDIR"/rootfs.mnt
 
 	sed_cfg -i \
+		"$OUTDIR"/rootfs.mnt/etc/systemd/system/resize-home-fs.service \
 		"$OUTDIR"/rootfs.mnt/etc/exim4/update-exim4.conf.conf \
 		"$OUTDIR"/rootfs.mnt/etc/exim4/dxld/encrypt.sh \
 		"$OUTDIR"/rootfs.mnt/etc/mailname \
@@ -170,9 +176,7 @@ case "$1" in
 
 (config-update)
 	update-initramfs -u
-	cat srv/debconf-db \
-		| sed_cfg - \
-		| debconf-set-selections
+	sed_cfg srv/debconf-db | debconf-set-selections
 	;;
 
 (packages)

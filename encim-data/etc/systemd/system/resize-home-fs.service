@@ -1,5 +1,5 @@
 [Unit]
-Description=Resize home filesystem to fit available space
+Description=Resize filesystem on CFG_PART_BOOT_RESIZE_DISKCFG_PART_BOOT_RESIZE_NUMBER to fit available space
 DefaultDependencies=no
 Before=network-online.target
 Before=sysinit.target
@@ -10,7 +10,7 @@ Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c "growpart /dev/sda 7 || true"
+ExecStart=/bin/sh -c "growpart CFG_PART_BOOT_RESIZE_DISK CFG_PART_BOOT_RESIZE_NUMBER || true"
 RemainAfterExit=yes
 TimeoutSec=0
 StandardOutput=journal+console

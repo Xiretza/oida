@@ -1,5 +1,5 @@
-#!/bin/sh
-# Copyright (C) 2017  Daniel Gröber <dxld@darkboxed.org>
+#!/bin/bash
+# Copyright (C) 2017-2019  Daniel Gröber <dxld@darkboxed.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,10 +16,26 @@
 
 set -u -e
 
+### BEGIN CONFIG ###
+# The variables declared in this block are intended to be (text) replaced when
+# installing this program systemwide.
+#
+# You can use something like this to do the replacement:
+#   sed -n '/BEGIN CONFIG/,/END CONFIG/{s/^LIBDIR=.*/LIBDIR=FOOBAR/;p}'
+
+# TODO: remove; this concept doesn't make sense when installed systemwide
+TOPDIR="$(realpath "$(dirname "$0")")"
+readonly TOPDIR
 export TOPDIR
-readonly TOPDIR="$(realpath "$(dirname "$0")")"
+
+LIBDIR="$(realpath "$(dirname "$0")"/lib)"
+readonly LIBDIR
 export LIBDIR
-readonly LIBDIR="$(realpath "$(dirname "$0")"/lib)"
+
+unset BASH_LOADABLES_PATH
+BASH_LOADABLES_PATH=$TOPDIR/builtins
+readonly BASH_LOADABLES_PATH
+### END CONFIG ###
 
 die () {
 	printf '%s\n' "$@" >&2
@@ -27,109 +43,49 @@ die () {
 }
 
 usage () {
-	die "Usage: $0 WORKDIR SCRIPT"
+	die "Usage: $0 SCRIPT"
 }
 
-if [ x"$1" = x'--unshared' ]; then
-	UNSHARED_FLAG="$1"; shift
-fi
-export OUTDIR="$1"; shift || usage
-export SCRIPT="$1"; shift || usage
-if [ $# -ge 1 ]; then
-	CMD="$1"; shift || usage
-else
-	CMD=run
+if [ $# -lt 2 ]; then
+	usage
 fi
 
-# shellcheck source=lib/debug.sh
-. "$LIBDIR"/debug.sh
-# shellcheck source=lib/cleanup.sh
-. "$LIBDIR"/cleanup.sh
-# shellcheck source=lib/unshare.sh
-. "$LIBDIR"/unshare.sh
-# shellcheck source=lib/in.sh
-. "$LIBDIR"/in.sh
-# shellcheck source=lib/overlay.sh
-. "$LIBDIR"/overlay.sh
+export SCRIPT="$1"; readonly SCRIPT; shift
+export OUTDIR="$1"; readonly OUTDIR; shift
+
+# This is to make using 'source' with unqualified script names work
+PATH="$LIBDIR:$PATH"
+
+# shellcheck source=lib/oida-debug.sh
+. oida-debug.sh
+# shellcheck source=lib/oida-cleanup.sh
+. oida-cleanup.sh
+# shellcheck source=lib/oida-builtins.sh
+. oida-builtins.sh
+# shellcheck source=lib/oida-rundir.sh
+. oida-rundir.sh
+# shellcheck source=lib/oida-unshare.sh
+. oida-unshare.sh
+
+# shellcheck source=lib/oida-ns.sh
+. oida-ns.sh
 
 [ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
 
-set $(dbg 20 +x:-x)
-
-mkdir -p "$OUTDIR"
-
-if [ x"${UNSHARED_FLAG:-}" != x'--unshared' ]; then
-	unshare_rootro -w "$OUTDIR" sh "$0" --unshared "$OUTDIR" "$SCRIPT" "$CMD" "$@"
-	exit $?
-fi
-
-mkdir -p "$OUTDIR"/rootfs.mnt
+#set "$(dbg 20 +x:-x)"
 
 # clean locale environment stuff
 eval export "$(env -i LANG=C.UTF-8 locale)"
 
-run_step () {
-	local mode cached user  old_IFS IFS
-	mode=host
+mkdir -p "$OUTDIR"
 
-	if [ x"$step" != x"$opt" ]; then
-		old_IFS="$IFS"
-		IFS=','
-		for o in $opt; do
-		    IFS="$old_IFS"
+ns_open host_rw_ns mnt
 
-		    case "$o" in
-			(in_target_chroot)  mode="$o";;
-			(in_target_overlay) mode="$o";;
-			(in_target)         mode="$o";;
-			(host)              mode="$o";;
-			(image)             mode=host;;
+rundir_cleanup_leftover
+rundir_setup
 
-			(overlay)           overlay_create "$step1";;
-			(overlay_cached)    overlay_create_cached "$step1";;
+unshare_rootro -w "$OUTDIR"
 
-			(*)                die "$0: Unknown step option '$o'";;
-		    esac
-		done
-	fi
+ns_open host_ro_ns mnt net
 
-	case "$mode" in
-	    (host)
-		step "$step1" "$step";;
-
-	    (in_*)
-		printf '========== Running step %s[%s]\n' "$step" "$opt" >&2
-
-		exec 3<&0
-		{
-			for import in $(imports); do
-			    cat "$LIBDIR"/"$import"
-			done
-
-			cat "$SCRIPT"
-
-			printf '\n%s <&3\n' '"$@"'
-		} | $mode  PS4="+($stepnum)    " sh -s $(dbg 30 +x:-x) step "$step1" "$step"
-		exec 3<&-
-		;;
-
-	esac
-}
-
-. $(realpath "$SCRIPT")
-
-for import in $(imports); do
-    . "$LIBDIR"/"$import"
-done
-
-for step0 in $(steps); do
-    opt=${step0#*=}
-    step1=${step0%%=*}
-
-    stepnum=${step1%%-*}
-    step=${step1#*-}
-
-    case "$CMD" in
-	(run) run_step ;;
-    esac
-done
+. "$SCRIPT"

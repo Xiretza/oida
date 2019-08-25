@@ -25,6 +25,7 @@ case "$1" in
 	;;
 
     ERROR69)
+	# this should terminate the script before the "echo cleanup" above
 	cleanup_cmd exit 69
 	;;
 

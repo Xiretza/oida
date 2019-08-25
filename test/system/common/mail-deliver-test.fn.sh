@@ -19,6 +19,6 @@ mail_deliver_test () {
 	  --server "$mail_server" \
 	  --helo "tester.${domain}" \
 	  --from root@"tester.${domain}" \
-	  --to $recipient \
+	  --to "$recipient" \
 	  --timeout 5
 }

@@ -28,7 +28,8 @@ sed_cfg () {
     set | grep ^CFG_ | (
 	while read -r c; do
 	    eval "v=\$${c%%=*}"
-	    set -- -e "s#${c%%=*}#$v#" "$@"
+	    # shellcheck disable=SC2154
+	    set -- -e "s,${c%%=*},$v," "$@"
 	done
 	sed "$@" <&3
     )

@@ -23,7 +23,6 @@
 # Cleanup:
 #   The loopback device will be removed on termination by the [cleanup module].
 loopback_create () {
-	local -; set -u
 	local file var
 	file="$1"; shift
 	var="$1"; shift

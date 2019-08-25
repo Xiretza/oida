@@ -1,4 +1,6 @@
-#!/usr/bin/expect --
+#!/usr/bin/env tclsh
+package require Tcl
+package require Expect
 
 proc shellescape {str} {
     return "'[string map {' '\"'\"'} $str]'"
@@ -32,8 +34,8 @@ proc expect_prompt {} {
 
 
 set prompt "\[$#%] $"
-exp_internal 1
-#log_user 0
+#exp_internal 1
+log_user 0
 
 set do_sigint 1
 set do_login  1

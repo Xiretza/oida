@@ -100,7 +100,7 @@ end () {
 }
 
 cmd () {
-    b64=$(printf "%s\n" "$*" 'exit $?' | base64) >&4
+    b64=$(printf '%s\n' "$*" 'exit $?' | base64) >&4
 
     ( sed -n -e '/#@%/Q' -e 'p' <&3 | base64 -d 2>/dev/null | awk 'BEGIN { FS = "="; i=0; }  { if(i > 0 && t) { print t; t = ""; }  if(/^RV=/) { i++; t = $0; rv = $2; } else { print $0; } }  END { exit rv; }' ) & pid=$!
     printf '%s\r' 'printf "%s\n" '"$b64"' | base64 -d 2>/dev/null | ( sh 2>/dev/null; printf "%s\n" "RV=$?" </dev/null ) | base64 2>/dev/null' >&4 ;

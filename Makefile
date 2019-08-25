@@ -1,5 +1,5 @@
 SHELLCHECK = shellcheck
-SCFLAGS = -fgcc --exclude=SC2039 -s sh
+SCFLAGS = -fgcc --exclude=SC2039 --exclude=SC1090 -s bash
 
 SHELLTEST = shelltest
 
@@ -10,7 +10,7 @@ all: check unit
 check: $(SCRIPTS)
 	$(SHELLCHECK) $(SCFLAGS) $^
 
-test: unit system
+test: unit
 
 unit:
 	$(SHELLTEST) --execdir test/unit

@@ -149,7 +149,7 @@ qemu_create () {
 	-net nic,model=e1000,macaddr="$mac" \
 	-net tap,ifname="${hostname}-h",script=no,downscript=no \
 	\
-	-drive file="$disk",format=raw,if=scsi
+	-drive file="$disk",format=raw,if=ide
 
     HOSTS_ADDRS="$HOSTS_ADDRS
 1.2.3.$HOST_ADDR	$hostname"
@@ -159,7 +159,8 @@ qemu_create () {
     dnsmasq_reload "$dnsmasq_hostname"
 
     if [ "$tout" -gt 0 ] && ! ping -q -n -w"$tout" -c1 1.2.3.$HOST_ADDR; then
-    	 printf "error: qemu '%s' failed to respond after $tout seconds.\n">&2
+    	    printf "error: qemu '%s' %s\\n" \
+		   "$hostname" "failed to respond after $tout seconds.">&2
     	 exit 1
     fi
 

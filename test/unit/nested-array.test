@@ -1,0 +1,11 @@
+bash nested-array.sh
+>>>
+"1", "2 3", "4", "a b", "c", "d", "e", "foobar", "baz", .
+0, 3, 7, .
+3, 4, 2, .
+
+"1", "2 3", "4", .
+"a b", "c", "d", "e", .
+"foobar", "baz", .
+idx=3 failed
+>>>= 0

@@ -14,13 +14,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Usage:
+# Example: sh $(dbg 7 +x:-x) <<EOF...
+dbg () {
+	local loglevel
+	loglevel="$1"
 
-set -e
-# shellcheck source=lib/unshare.sh
-. "$(dirname "$0")"/../lib/unshare.sh
-# shellcheck source=lib/cleanup.sh
-. "$(dirname "$0")"/../lib/cleanup.sh
-# shellcheck source=lib/debug.sh
-. "$(dirname "$0")"/../lib/debug.sh
-
-unshare_rootro -n PS4='+(tst)    ' ENCIM_TEST_SYSTEM=1 sh "$(dbg 30 +x:-x)" "$@"
+	local IFS
+	IFS=:
+	# we want word splitting here
+	# shellcheck disable=SC2086
+	set -- $2
+	if [ "${DEBUG:-0}" -ge "${loglevel:-0}" ]; then
+		printf '%s' "$2"
+	else
+		printf '%s' "$1"
+	fi
+}

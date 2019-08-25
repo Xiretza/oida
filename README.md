@@ -51,5 +51,5 @@ Dependencies
 On Debian the following command will install all necessary dependencies:
 
 ```
-apt-get install git debootstrap squashfs-tools qemu-system swaks dnsmasq expect socat 
+apt-get install git debootstrap squashfs-tools qemu-system swaks dnsmasq expect socat shelltestrunner shellcheck
 ```

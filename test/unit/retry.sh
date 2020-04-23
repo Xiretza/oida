@@ -2,8 +2,8 @@
 
 set +e # otherwise assert_failure wouldn't be reached
 
-# shellcheck source=lib/retry.sh
-. ./../../lib/retry.sh
+# shellcheck source=lib/oida-retry.sh
+. ./../../lib/oida-retry.sh
 
 assert_failure () { [ $? -ge 1 ] || exit 1; }
 assert_success () { [ $? -ge 1 ] && exit 1; }

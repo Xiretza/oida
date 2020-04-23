@@ -112,6 +112,6 @@ cleanup_do () {
 	CLEANUP_len=()
 }
 
-#trap 'cleanup_do; trap - INT; kill -INT $$' INT
-#trap 'cleanup_do; trap - TERM; kill -TERM $$' TERM
-#trap 'cleanup_do; trap - EXIT' EXIT
+trap 'cleanup_do; trap - INT; kill -INT $$' INT
+trap 'cleanup_do; trap - TERM; kill -TERM $$' TERM
+trap 'cleanup_do; trap - EXIT' EXIT

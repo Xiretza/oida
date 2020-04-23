@@ -2,8 +2,8 @@
 
 set -e
 
-# shellcheck source=lib/cleanup.sh
-. ./../../lib/cleanup.sh
+# shellcheck source=lib/oida-cleanup.sh
+. ./../../lib/oida-cleanup.sh
 
 trap - EXIT INT TERM
 

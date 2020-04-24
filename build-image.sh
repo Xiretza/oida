@@ -43,49 +43,77 @@ die () {
 }
 
 usage () {
-	die "Usage: $0 SCRIPT"
+	die "Usage: $0 build SCRIPT OUTDIR | $0 test SCRIPT OUTDIR"
 }
 
-if [ $# -lt 2 ]; then
-	usage
-fi
+cmd_build () {
+	export SCRIPT="$1"; readonly SCRIPT; shift
+	export OUTDIR="$1"; readonly OUTDIR; shift
 
-export SCRIPT="$1"; readonly SCRIPT; shift
-export OUTDIR="$1"; readonly OUTDIR; shift
+	# shellcheck source=lib/oida-debug.sh
+	. oida-debug.sh
+	# shellcheck source=lib/oida-cleanup.sh
+	. oida-cleanup.sh
+	# shellcheck source=lib/oida-builtins.sh
+	. oida-builtins.sh
+	# shellcheck source=lib/oida-rundir.sh
+	. oida-rundir.sh
+	# shellcheck source=lib/oida-unshare.sh
+	. oida-unshare.sh
+
+	# shellcheck source=lib/oida-ns.sh
+	. oida-ns.sh
+
+	[ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
+
+	#set "$(dbg 20 +x:-x)"
+
+	# clean locale environment stuff
+	eval export "$(env -i LANG=C.UTF-8 locale)"
+
+	mkdir -p "$OUTDIR"
+
+	ns_open host_rw_ns /proc/self/ns mnt
+
+	rundir_cleanup_leftover
+	rundir_setup
+
+	unshare_rootro -w "$OUTDIR"
+
+	ns_open host_ro_ns /proc/self/ns mnt net
+
+	. "$SCRIPT"
+}
+
+cmd_test () {
+	export SCRIPT="$1"; readonly SCRIPT; shift
+	export WORKDIR="$1"; readonly WORKDIR; shift
+
+	# shellcheck source=lib/oida-cleanup.sh
+	. oida-cleanup.sh
+	# shellcheck source=lib/oida-unshare.sh
+	. oida-unshare.sh
+	# shellcheck source=lib/oida-debug.sh
+	. oida-debug.sh
+
+	set "$(dbg 30 +x:-x)"
+	PS4='+(tst)    '
+
+	unshare_rootro -n
+
+	. "$SCRIPT"
+
+}
 
 # This is to make using 'source' with unqualified script names work
 PATH="$LIBDIR:$PATH"
 
-# shellcheck source=lib/oida-debug.sh
-. oida-debug.sh
-# shellcheck source=lib/oida-cleanup.sh
-. oida-cleanup.sh
-# shellcheck source=lib/oida-builtins.sh
-. oida-builtins.sh
-# shellcheck source=lib/oida-rundir.sh
-. oida-rundir.sh
-# shellcheck source=lib/oida-unshare.sh
-. oida-unshare.sh
+if [ $# -lt 3 ]; then
+	usage
+fi
 
-# shellcheck source=lib/oida-ns.sh
-. oida-ns.sh
-
-[ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
-
-#set "$(dbg 20 +x:-x)"
-
-# clean locale environment stuff
-eval export "$(env -i LANG=C.UTF-8 locale)"
-
-mkdir -p "$OUTDIR"
-
-ns_open host_rw_ns mnt
-
-rundir_cleanup_leftover
-rundir_setup
-
-unshare_rootro -w "$OUTDIR"
-
-ns_open host_ro_ns mnt net
-
-. "$SCRIPT"
+COMMAND=$1; readonly COMMAND; shift
+case "$COMMAND" in
+	build)  cmd_build "$@";;
+	test)   cmd_test  "$@";;
+esac

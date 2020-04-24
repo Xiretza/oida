@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ -z "${ENCIM_TEST_SYSTEM:-}" ]; then
+if [ "$COMMAND" != "test" ]; then
     echo "$0: Do not run tests directly, they will gobble up your system!">&2
     exit 1
 fi

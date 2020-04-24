@@ -81,7 +81,7 @@ unshare_rootro () {
 	for ns in "${nss[@]}"; do
 		unshare "$ns"
 		cleanup_ns_mount "${host_rw_ns[mnt]}" "$netns"
-		mount -o bind /proc/$$/ns/net "$netns"
+		mount -o bind /proc/$$/ns/"$ns" "$netns"
 	done
 
 	unshare mnt

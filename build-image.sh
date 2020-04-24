@@ -50,19 +50,6 @@ cmd_build () {
 	export SCRIPT="$1"; readonly SCRIPT; shift
 	export OUTDIR="$1"; readonly OUTDIR; shift
 
-	# shellcheck source=lib/oida-debug.sh
-	. oida-debug.sh
-	# shellcheck source=lib/oida-cleanup.sh
-	. oida-cleanup.sh
-	# shellcheck source=lib/oida-builtins.sh
-	. oida-builtins.sh
-	# shellcheck source=lib/oida-rundir.sh
-	. oida-rundir.sh
-	# shellcheck source=lib/oida-unshare.sh
-	. oida-unshare.sh
-
-	# shellcheck source=lib/oida-ns.sh
-	. oida-ns.sh
 
 	[ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
 
@@ -89,28 +76,43 @@ cmd_test () {
 	export SCRIPT="$1"; readonly SCRIPT; shift
 	export WORKDIR="$1"; readonly WORKDIR; shift
 
-	# shellcheck source=lib/oida-cleanup.sh
-	. oida-cleanup.sh
-	# shellcheck source=lib/oida-unshare.sh
-	. oida-unshare.sh
-	# shellcheck source=lib/oida-debug.sh
-	. oida-debug.sh
 
 	set "$(dbg 30 +x:-x)"
 	PS4='+(tst)    '
 
+	ns_open host_rw_ns /proc/self/ns mnt
+	rundir_cleanup_leftover
+	rundir_setup
+
 	unshare_rootro -n
+	#^ network namespace too since we'll be setting up a test network
 
 	. "$SCRIPT"
 
 }
 
-# This is to make using 'source' with unqualified script names work
-PATH="$LIBDIR:$PATH"
-
 if [ $# -lt 3 ]; then
 	usage
 fi
+
+# This is to make using 'source' with unqualified script names work
+PATH="$LIBDIR:$PATH"
+
+# Source common functions
+
+# shellcheck source=lib/oida-debug.sh
+. oida-debug.sh
+# shellcheck source=lib/oida-cleanup.sh
+. oida-cleanup.sh
+# shellcheck source=lib/oida-rundir.sh
+. oida-rundir.sh
+# shellcheck source=lib/oida-builtins.sh
+. oida-builtins.sh
+# shellcheck source=lib/oida-ns.sh
+. oida-ns.sh
+# shellcheck source=lib/oida-unshare.sh
+. oida-unshare.sh
+
 
 COMMAND=$1; readonly COMMAND; shift
 case "$COMMAND" in

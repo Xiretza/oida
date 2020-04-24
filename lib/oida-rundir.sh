@@ -16,9 +16,6 @@
 
 # DEPENDS: oida-cleanup.sh
 
-RUNDIR_MNT=/run/encim
-readonly RUNDIR_MNT
-
 # Usage: rundir_setup
 #
 # Setup /run/encim so it can be used for mounting namespace references and other

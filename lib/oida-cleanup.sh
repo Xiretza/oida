@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2017-2019  Daniel Gröber <dxld@darkboxed.org>
+# Copyright (C) 2017-2020  Daniel Gröber <dxld@darkboxed.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,6 +52,8 @@ cleanup_mount () {
 	done
 }
 
+# To cleanup an ns reference mount we have to switch to the (pre-unshare)
+# host mount namespace first
 cleanup_ns_mount () {
 	local ns mnt
 	ns=$1; shift
@@ -75,6 +77,7 @@ _cleanup_do_ns_mount () ( #< note the subshell parens!
 	ns=$1; shift
 	mnt=$1; shift
 
+	# shellcheck disable=SC2086
 	IFS=' ' setns $ns
 	cleanup_do_mount "$mnt"
 )

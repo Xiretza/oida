@@ -28,8 +28,7 @@ image_create () {
 	size="$1"; shift
 	image_var="$1"; shift
 
-	local image mnt
-	image="$OUTDIR/${image_name}.image"
+	local image="$OUTDIR/${image_name}.image"
 
 	dd if=/dev/zero bs=1 seek="$size" count=1 > "$image"
 

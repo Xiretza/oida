@@ -33,15 +33,20 @@ _unshare_umount_R () {
 #
 # Options:
 # - if `-n` is given the network namespace is also unshared,
-# - if `-w WORKDIR` is given the direcrory WORKDIR's writeability is preserved.
+# - if `-w WORKDIR` is given the WORKDIR directory's writeability is preserved.
 #
 # Environment
 # - in $RUNDIR (see oida-rundir.sh)
 # - in $host_rw_ns[mnt]
 unshare_rootro () {
-	local workdir ns nss mntns netns flag dir
+	local workdir ns nss mntns netns flag
 	workdir=
 	nss=( ) # additional namespaces to unshare
+
+	if [ -e $RUNDIR/mntns ]; then
+		echo "Error: unshare_rootro: Already unshared!" >&2
+		exit 1
+	fi
 
 	mntns=$RUNDIR/mntns; touch "$mntns"
 	netns=$RUNDIR/netns; touch "$netns"
@@ -87,7 +92,7 @@ unshare_rootro () {
 	# shellcheck disable=SC2154
 	wait $unshare_wait_parent_PID
 
-	umount -R "$RUNDIR_MNT"
+	umount -R "/run/encim"
 
 	cwd=$PWD
 	rwroot=$(cd / || die "cd failed"; mktemp -d -p ./tmp 'rootro.XXXXXXXX')

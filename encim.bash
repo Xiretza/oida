@@ -55,11 +55,11 @@ fi
 
 overlay_mount "$OUTDIR"/rootfs.bootstrap "$TARGET"
 
-ns_open FANCY_ROOTFS_NS mnt
+ns_open FANCY_ROOTFS_NS /proc/self/ns mnt
 unshare mnt
-ns_open JUST_ROOTFS_NS mnt
+ns_open JUST_ROOTFS_NS /proc/self/ns mnt
 builtin setns "${FANCY_ROOTFS_NS[@]}"
-unset FANCY_ROOTFS_NS
+ns_close FANCY_ROOTFS_NS
 # ^ I do it this weird, complicated way to have the parent namespace, which is
 # represented on the host in /run/encim, be more useful for debugging.
 

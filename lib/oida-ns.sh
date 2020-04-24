@@ -18,32 +18,68 @@
 # The [ns module] allows saving, copying and restoring the namespace context of
 # the shell.
 
-# Usage: ns_open FD_VAR= [mnt|net|cgroup..]...
+# Usage: ns_open FD_ARRAY= NS_DIR [mnt|net|cgroup..]...
 #
-# Open the given types of namespace references from /proc/self/ns and place them
-# in the associative array named by FD_VAR. We do it this way because string
-# expansion forces a subshell which would make opening the file descriptors
-# futile, also being able to reference a specific type to ns is useful!
+# Open the given types of namespace references from /proc/self/ns and place
+# them in the associative array named by FD_ARRAY. We do it this way
+# because string expansion forces a subshell which would make opening the
+# file descriptors futile, also being able to reference a specific type to
+# ns is useful!
 ns_open () {
-	local var ty nss fd
+	[ $# -gt 2 ] || {
+		echo "Error: ns_open: Not enough arguments">&2
+		return 1
+	}
+
+	local var dir ty nss fd
 	var=$1; shift
+	dir=$1; shift
 	declare -Ag "$var"
-	nss=(   )
+	nss=(  )
 	for ty in $@; do
-		exec {fd}<"/proc/self/ns/$ty"
+		exec {fd}<"$dir/$ty"
 		eval "$var[\$ty]=\$fd"
 	done
-
-	declare -p $var
 }
 
-# Usage: ns_close FD...
+# Usage: ns_close FD_ARRAY
+#
+# Close the file descriptors in the named array and unset the array.
+#
+# Example:
+#   ns_open NS_FDs /proc/self/ns mnt net
+#   ns_close NS_FDs
 ns_close () {
-	local fd
-
-	for fd in $@; do
-		echo $fd
-		ls -l /proc/self/fd
+	local var fd
+	[ $# -le 1 ] || { echo "Error: Usage: ns_close FD_ARRAY">&2; return 1; }
+	var=$1; shift
+	for fd in "${!var[@]}"; do
+		#echo $fd
+		#ls -l /proc/self/fd
 		exec {fd}<&-
+	done
+	unset "$var"
+}
+
+# Usage: ns_mount SRC_DIR TARGET_DIR NS_TYPE...
+#
+# Mount the namespace references with the given NS_TYPEs from SRC_DIR to
+# corresponding files in DEST_DIR.
+#
+# Example:
+#   ns_mount /proc/self/ns /some/dir mnt net
+#
+ns_mount () {
+	[ $# -le 2 ] || \
+		{ echo "Error: ns_mount: Too many arguments">&2; return 1; }
+
+	local src dest
+	src=$1; shift
+	dest=$1; shift
+
+	mkdir -p "$dest"
+	for ty in $@; do
+		touch "$dest/$ty"
+		mount -o bind "$src/$ty" "$dest/$ty"
 	done
 }

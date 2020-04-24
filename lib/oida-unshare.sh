@@ -43,13 +43,13 @@ unshare_rootro () {
 	workdir=
 	nss=( ) # additional namespaces to unshare
 
-	if [ -e $RUNDIR/mntns ]; then
+	if [ -e "$RUNDIR"/mntns ]; then
 		echo "Error: unshare_rootro: Already unshared!" >&2
 		exit 1
 	fi
 
-	mntns=$RUNDIR/mntns; touch "$mntns"
-	netns=$RUNDIR/netns; touch "$netns"
+	mntns="$RUNDIR"/mntns; touch "$mntns"
+	netns="$RUNDIR"/netns; touch "$netns"
 	cleanup "$mntns" "$netns"
 
 	while getopts nw: flag; do

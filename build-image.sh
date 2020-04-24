@@ -47,8 +47,8 @@ usage () {
 }
 
 cmd_build () {
-	export SCRIPT="$1"; readonly SCRIPT; shift
-	export OUTDIR="$1"; readonly OUTDIR; shift
+	SCRIPT="$1"; shift; readonly SCRIPT
+	OUTDIR="$1"; shift; readonly OUTDIR
 
 
 	[ x"$(id -u)" = x'0' ] || die "$0: Must run as root"
@@ -73,9 +73,8 @@ cmd_build () {
 }
 
 cmd_test () {
-	export SCRIPT="$1"; readonly SCRIPT; shift
-	export WORKDIR="$1"; readonly WORKDIR; shift
-
+	SCRIPT="$1";  shift; readonly SCRIPT
+	WORKDIR="$1"; shift; readonly WORKDIR
 
 	set "$(dbg 30 +x:-x)"
 	PS4='+(tst)    '

@@ -1,6 +1,6 @@
-. ./lib/image.sh
-. ./lib/cleanup.sh
-. ./lib/test.sh
+. oida-image.sh
+. oida-cleanup.sh
+. oida-test.sh
 
 setup () {
     TIMEOUT=120
@@ -9,7 +9,7 @@ setup () {
 
     CFG_USERNAME=${CFG_USERNAME:-'dxld'}
 
-    DISK_IMAGE="$WORKDIR"/90-disk.image
+    DISK_IMAGE="$WORKDIR"/disk.image
 
     bridge_create "encim-br"
 

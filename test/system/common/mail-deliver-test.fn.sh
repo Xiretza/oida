@@ -1,6 +1,6 @@
-. ./lib/retry.sh
-. ./lib/cleanup.sh
-. ./lib/test.sh
+. oida-retry.sh
+. oida-cleanup.sh
+. oida-test.sh
 
 # Usage: mail_deliver_test MAIL_SERVER DOMAIN RECIPIENT
 #

@@ -1,8 +1,6 @@
-#!#/bin/sh
+#!#/bin/bash
 set -e -u
 set -x
-
-cd "$(dirname "$0")"/../../../
 
 . ./test/system/common/mail-deliver-test.fn.sh
 . ./test/system/encim/setup.fn.sh

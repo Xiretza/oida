@@ -1,0 +1,32 @@
+# Test defaulting if unset in environment
+bash cfg.sh 'echo $CFG_FOO'
+>>>
+foo
+>>>2
+>>>= 0
+
+# Test default override via environment
+CFG_FOO='not foo' bash cfg.sh 'echo $CFG_FOO'
+>>>
+not foo
+>>>2
+>>>= 0
+
+# Make sure the config parameter is not exported
+CFG_FOO='not foo' bash cfg.sh '! is_exported CFG_FOO'
+>>>
+>>>2
+>>>= 0
+
+# Ensure the parameter is made readonly
+bash cfg.sh 'CFG_FOO=123'
+>>>
+>>>2 /readonly variable/
+>>>= /[^0]/
+
+# We don't allow the non-printing ASCII GS character in the variable value
+# since it's the sed 's' expression seperator we use.
+CFG_FOO="foofoo" bash cfg-sed.sh
+>>>
+>>>2 /^Error: .*/
+>>>= /[^0]/

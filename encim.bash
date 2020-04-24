@@ -21,17 +21,17 @@ source oida-image.sh
 source oida-loopback.sh
 source oida-overlay.sh
 
-cfg CFG_DEBIAN_RELEASE:-stretch
-cfg CFG_USERNAME:-dxld
-cfg CFG_HOSTNAME:-encim
-cfg CFG_FQDN:-encim.servers.dxld.at
-cfg CFG_EXIM_OTHER_HOSTNAMES:-"$CFG_FQDN : dxld.at : darkboxed.org"
-cfg CFG_GPG_ENC_RECIPIENT:-dxld@encim.servers.dxld.at
-cfg CFG_ROOT_PASSWORD:-root
+cfg CFG_DEBIAN_RELEASE stretch
+cfg CFG_USERNAME dxld
+cfg CFG_HOSTNAME encim
+cfg CFG_FQDN encim.servers.dxld.at
+cfg CFG_EXIM_OTHER_HOSTNAMES "$CFG_FQDN : dxld.at : darkboxed.org"
+cfg CFG_GPG_ENC_RECIPIENT dxld@encim.servers.dxld.at
+cfg CFG_ROOT_PASSWORD root
 
 # Device and partition number to resize on early bootup
-cfg CFG_PART_BOOT_RESIZE_DISK:-/dev/sda
-cfg CFG_PART_BOOT_RESIZE_NUMBER:-7
+cfg CFG_PART_BOOT_RESIZE_DISK /dev/sda
+cfg CFG_PART_BOOT_RESIZE_NUMBER 7
 
 DATADIR="$(realpath "$(dirname "$BASH_SOURCE")")"/encim-data
 export DATADIR

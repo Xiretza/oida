@@ -42,6 +42,25 @@ cleanup "$TARGET"
 mkdir -p "$TARGET" #< just a mountpoint
 
 
+# 				      disk
+image_create "disk" 1500M DISK_IMAGE
+sfdisk "$DISK_IMAGE" <<-EOF
+		1M, 512M   , L, *
+		  , 512M   , L,
+		  ,        , E,
+		  , 32M    , L,
+		  , 32M    , L,
+		  , 128M   , L,
+	EOF
+
+loopback_create "$DISK_IMAGE" DISK_LODEV
+
+ROOTFS_LODEVP="${DISK_LODEV}p1"
+MAILVAR_LODEVP="${DISK_LODEV}p5"
+HOME_LODEVP="${DISK_LODEV}p7"
+
+CFG_ROOTFS_PARTUUID="$(blkid "$ROOTFS_LODEVP" -o value -s PARTUUID)"
+
 
 #				   bootstrap
 if ! [ -e "$OUTDIR"/rootfs.bootstrap.done ]; then
@@ -88,7 +107,8 @@ sed_cfg -i \
 	"$TARGET"/etc/exim4/update-exim4.conf.conf \
 	"$TARGET"/etc/exim4/dxld/encrypt.sh \
 	"$TARGET"/etc/mailname \
-	"$TARGET"/etc/hostname
+	"$TARGET"/etc/hostname \
+	"$TARGET"/boot/grub/grub.cfg
 
 mv "$TARGET"/home/user/ \
    "$TARGET"/home/"$CFG_USERNAME"
@@ -137,7 +157,6 @@ DEBIAN_FRONTEND=noninteractive \
 rm /var/cache/apt/archives/*.deb
 
 
-
 # 			   bootloader (rootfs stage)
 mkdir -p /boot/grub/
 cp -a /usr/lib/grub/i386-pc /boot/grub/
@@ -156,23 +175,7 @@ grub-mkimage \
 
 builtin setns "${JUST_ROOTFS_NS[@]}"
 
-# 				      disk
-image_create "disk" 1500M DISK_IMAGE
-sfdisk "$DISK_IMAGE" <<-EOF
-		1M, 512M   , L, *
-		  , 512M   , L,
-		  ,        , E,
-		  , 32M    , L,
-		  , 32M    , L,
-		  , 128M   , L,
-	EOF
-
-loopback_create "$DISK_IMAGE" DISK_LODEV
-
-ROOTFS_LODEVP="${DISK_LODEV}p1"
-MAILVAR_LODEVP="${DISK_LODEV}p5"
-HOME_LODEVP="${DISK_LODEV}p7"
-
+# 			  copy over target system
 mkfs.ext4 -L exim -d "$TARGET"/var/lib/exim4/ "$MAILVAR_LODEVP"
 mkfs.ext4 -L home -d "$TARGET"/home/ "$HOME_LODEVP"
 
@@ -183,8 +186,6 @@ rm -r "$TARGET"/home/
 mksquashfs "$TARGET" "$ROOTFS_LODEVP" \
 	   $(tty -s || printf '%s' -no-progress) -noappend \
 	   -no-fragments -no-sparse
-
-
 
 # 			bootloader (block device stage)
 (

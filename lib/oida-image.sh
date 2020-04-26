@@ -30,7 +30,8 @@ image_create () {
 
 	local image="$OUTDIR/${image_name}.image"
 
-	dd if=/dev/zero bs=1 seek="$size" count=1 > "$image"
+	rm -f "$image"
+	truncate --size="$size" "$image"
 
 	eval "$image_var=\$image"
 }

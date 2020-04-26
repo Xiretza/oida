@@ -74,13 +74,8 @@ fi
 
 overlay_mount "$OUTDIR"/rootfs.bootstrap "$TARGET"
 
-ns_open FANCY_ROOTFS_NS /proc/self/ns mnt
-unshare mnt
-ns_open JUST_ROOTFS_NS /proc/self/ns mnt
-builtin setns "${FANCY_ROOTFS_NS[@]}"
-ns_close FANCY_ROOTFS_NS
-# ^ I do it this weird, complicated way to have the parent namespace, which is
-# represented on the host in /run/encim, be more useful for debugging.
+ns_snapshot JUST_ROOTFS_NS /proc/self/ns mnt
+# ^ mksquashfs chokes on pseudo file systems, so store a state without them and restore later
 
 mount -t proc     proc       "$TARGET"/proc
 mount -t sysfs    sysfs      "$TARGET"/sys
@@ -174,6 +169,7 @@ grub-mkimage \
 
 
 builtin setns "${JUST_ROOTFS_NS[@]}"
+ns_close JUST_ROOTFS_NS
 
 # 			  copy over target system
 mkfs.ext4 -L exim -d "$TARGET"/var/lib/exim4/ "$MAILVAR_LODEVP"

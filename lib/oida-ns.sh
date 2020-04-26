@@ -83,3 +83,29 @@ ns_mount () {
 		mount -o bind "$src/$ty" "$dest/$ty"
 	done
 }
+
+# Usage: ns_snapshot FD_ARRAY= NS_DIR NS_TYPE...
+#
+# Duplicate the given namespaces and store a reference to the copies into
+# FD_ARRAY= (see documentation for ns_open).
+#
+# Example:
+#   ns_snaphot NS_COPIES /proc/self/ns mnt net
+#   [...] #< modify mounts or network configuration
+#   builtin setns "${NS_COPIES[@]}"
+#   ns_close NS_COPIES
+ns_snapshot () {
+	[ $# -gt 2 ] || {
+		echo "Error: ns_snapshot: Not enough arguments">&2
+		return 1
+	}
+
+	local varname="$1" dir="$2"
+	shift; shift
+
+	ns_open _CURR_NSS "$dir" "$@"
+	builtin unshare "$@"
+	ns_open "$varname" "$dir" "$@"
+	builtin setns "${_CURR_NSS[@]}"
+	ns_close _CURR_NSS
+}

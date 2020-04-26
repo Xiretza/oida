@@ -53,14 +53,14 @@ unshare_rootro () {
 	cleanup "$mntns" "$netns"
 
 	while getopts nw: flag; do
-            case "$flag" in
-                w) workdir=$OPTARG;;
-		n) nss+=( net );;
-                \?) exit 1;;
-                *)  ;;
-            esac
-        done
-        shift $(( OPTIND - 1))
+		case "$flag" in
+			w) workdir=$OPTARG;;
+			n) nss+=( net );;
+			\?) exit 1;;
+			*) ;;
+		esac
+	done
+	shift $(( OPTIND - 1))
 
 	# Ok so, bind mounting the mnt namespace reference-file from inside the
 	# new mount namespace (i.e. after `unshare mnt`) doesn't make a lick of

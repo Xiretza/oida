@@ -14,4 +14,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-enable -f oida-builtins.so unshare chroot setns eqns
+enable -f oida-builtins.so unshare chroot pivot_root setns eqns

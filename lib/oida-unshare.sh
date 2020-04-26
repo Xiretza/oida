@@ -122,7 +122,7 @@ unshare_rootro () {
 	mount -o remount,bind,ro /mnt/proc
 
 	cd /mnt || die "cd failed"
-	pivot_root . "$rwroot"
+	builtin pivot_root . "$rwroot"
 	cd / || die "cd falied" # recommended by manpage
 
 	umount -l -R "$rwroot"
